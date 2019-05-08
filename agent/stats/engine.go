@@ -600,11 +600,24 @@ func (engine *DockerStatsEngine) taskContainerMetricsUnsafe(taskArn string) ([]*
 			continue
 		}
 
-		containerMetrics = append(containerMetrics, &ecstcs.ContainerMetric{
-			CpuStatsSet:    cpuStatsSet,
-			MemoryStatsSet: memoryStatsSet,
-		})
+		networkStatsSet, err := container.statsQueue.GetNetworkStatsSet()
+		if err != nil {
+			seelog.Warnf("Error getting nework stats, err: %v, container: %v", err, dockerID)
+			continue
+		}
 
+		storageStatsSet, err := container.statsQueue.GetStorageStatsSet()
+		if err != nil {
+			seelog.Warnf("Error getting storage stats, err: %v, container: %v", err, dockerID)
+			continue
+		}
+
+		containerMetrics = append(containerMetrics, &ecstcs.ContainerMetric{
+			CpuStatsSet:     cpuStatsSet,
+			MemoryStatsSet:  memoryStatsSet,
+			NetworkStatsSet: networkStatsSet,
+			StorageStatsSet: storageStatsSet,
+		})
 	}
 
 	return containerMetrics, nil
